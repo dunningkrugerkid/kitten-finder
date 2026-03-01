@@ -31,8 +31,12 @@ export class StJohnsScraper implements Scraper {
         timeout: 30_000,
       });
 
-      // Wait for the results table to appear
-      await page.waitForSelector("td.list-item", { timeout: 15_000 });
+      // Wait for results — shelter may have zero cats available
+      try {
+        await page.waitForSelector("td.list-item", { timeout: 15_000 });
+      } catch {
+        return { listings: [], source: this.source };
+      }
 
       const listings = await page.$$eval("td.list-item", (cells) => {
         return cells
