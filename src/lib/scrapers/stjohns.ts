@@ -16,6 +16,8 @@ const PETANGO_URL =
   "&authkey=n564epb07r0g7lui0pf0cb3tidbr5bunroe2cisfbusbkqmvn7" +
   "&recAmount=&detailsInPopup=No&featuredPet=Include&stageID=";
 
+const STJOHNS_AUTHKEY = "n564epb07r0g7lui0pf0cb3tidbr5bunroe2cisfbusbkqmvn7";
+
 const PETANGO_DETAILS_BASE =
   "https://ws.petango.com/webservices/adoptablesearch/wsAdoptableAnimalDetails.aspx";
 
@@ -75,7 +77,7 @@ export class StJohnsScraper implements Scraper {
         sex: l.sex,
         breed: l.breed,
         description: "",
-        listingUrl: `${PETANGO_DETAILS_BASE}?id=${l.sourceId}`,
+        listingUrl: `${PETANGO_DETAILS_BASE}?id=${l.sourceId}&authkey=${STJOHNS_AUTHKEY}`,
       }));
 
       return { listings: results, source: this.source };

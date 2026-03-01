@@ -9,6 +9,8 @@ const PETANGO_URL =
   "&authkey=o8exmnumy8ij0fy3wsebhs082gj44ikqi13yq6b7bg4wcgrxgm" +
   "&detailsInPopup=Yes&featuredPet=Include&stageID=2";
 
+const SPCA_AUTHKEY = "o8exmnumy8ij0fy3wsebhs082gj44ikqi13yq6b7bg4wcgrxgm";
+
 const PETANGO_DETAILS_BASE =
   "https://ws.petango.com/webservices/adoptablesearch/wsAdoptableAnimalDetails.aspx";
 
@@ -65,7 +67,7 @@ export class SpcaScraper implements Scraper {
           sex: l.sex,
           breed: l.breed,
           description: "",
-          listingUrl: `${PETANGO_DETAILS_BASE}?id=${l.sourceId}`,
+          listingUrl: `${PETANGO_DETAILS_BASE}?id=${l.sourceId}&authkey=${SPCA_AUTHKEY}`,
         }));
 
       return { listings: results, source: this.source };
