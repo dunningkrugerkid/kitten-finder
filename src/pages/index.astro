@@ -96,6 +96,8 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     .card:hover {
@@ -109,6 +111,7 @@
       object-fit: cover;
       display: block;
       background: #e8ddd0;
+      flex-shrink: 0;
     }
 
     .card-photo-placeholder {
@@ -320,8 +323,9 @@
         ? `<p class="card-breed">${escapeHtml(listing.breed)}</p>`
         : "";
 
-      const photo = listing.photoUrl
-        ? `<img class="card-photo" src="${escapeHtml(listing.photoUrl)}" alt="Photo of ${escapeHtml(listing.name)}" loading="lazy" />`
+      const hasRealPhoto = listing.photoUrl && !listing.photoUrl.includes("Photo-Not-Available");
+      const photo = hasRealPhoto
+        ? `<img class="card-photo" src="${escapeHtml(listing.photoUrl)}" alt="Photo of ${escapeHtml(listing.name)}" loading="lazy" onerror="this.outerHTML='<div class=\\'card-photo-placeholder\\'>&#128049;</div>'" />`
         : `<div class="card-photo-placeholder">&#128049;</div>`;
 
       return `
