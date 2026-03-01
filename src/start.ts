@@ -19,7 +19,3 @@ cron.schedule(cronExpr, () => {
 });
 
 console.log(`Kitten Finder scraper running — every ${intervalHours} hours`);
-
-// Import and start the Astro standalone server
-const entry = await import("../dist/server/entry.mjs");
-entry.startServer();
