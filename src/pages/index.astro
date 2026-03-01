@@ -3,10 +3,403 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kitten Finder for Callie</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f0eb;
+      color: #4a3728;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #6b4c3b;
+      margin-bottom: 0.25rem;
+    }
+
+    header p {
+      color: #8b7355;
+      font-size: 1.1rem;
+    }
+
+    .controls {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .controls label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b4c3b;
+    }
+
+    .controls select {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #d4c5b5;
+      border-radius: 6px;
+      background: #fff;
+      color: #4a3728;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .controls select:focus {
+      outline: 2px solid #b8956a;
+      outline-offset: 1px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .count-label {
+      font-size: 0.85rem;
+      color: #8b7355;
+    }
+
+    #grid {
+      max-width: 1100px;
+      margin: 1rem auto 2rem;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .card-photo {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      background: #e8ddd0;
+    }
+
+    .card-photo-placeholder {
+      width: 100%;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e8ddd0;
+      font-size: 4rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .card-body h2 {
+      font-size: 1.15rem;
+      color: #4a3728;
+      margin-bottom: 0.5rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .badge-source {
+      background: #e8ddd0;
+      color: #6b4c3b;
+    }
+
+    .badge-new {
+      background: #fde68a;
+      color: #92400e;
+    }
+
+    .badge-sex {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-age {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .card-breed {
+      font-size: 0.85rem;
+      color: #8b7355;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-link {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b4c3b;
+      text-decoration: none;
+      border-bottom: 2px solid #e8ddd0;
+      transition: border-color 0.15s ease;
+    }
+
+    .card-link:hover {
+      border-color: #6b4c3b;
+    }
+
+    #empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #8b7355;
+      grid-column: 1 / -1;
+    }
+
+    #empty-state .emoji {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #8b7355;
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-group {
+        justify-content: space-between;
+      }
+      .spacer {
+        display: none;
+      }
+      #grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Kitten Finder for Callie</h1>
-  <p>Finding a friend in St. John's, NL</p>
+  <header>
+    <h1>Kitten Finder for Callie</h1>
+    <p>Finding a friend in St. John's, NL</p>
+  </header>
+
+  <div class="controls">
+    <div class="filter-group">
+      <label for="filter-source">Source</label>
+      <select id="filter-source">
+        <option value="">All</option>
+        <option value="spca">SPCA St. John's</option>
+        <option value="heavenly">Heavenly Creatures</option>
+        <option value="stjohns">City of St. John's</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-sex">Sex</label>
+      <select id="filter-sex">
+        <option value="">Any</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-age">Age</label>
+      <select id="filter-age">
+        <option value="">Any</option>
+        <option value="Kitten">Kitten</option>
+        <option value="Young">Young</option>
+        <option value="Adult">Adult</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="newest">Newest First</option>
+        <option value="alpha">Alphabetical</option>
+      </select>
+    </div>
+
+    <div class="spacer"></div>
+    <span class="count-label" id="count-label"></span>
+  </div>
+
+  <div id="grid">
+    <div id="loading">Loading listings...</div>
+  </div>
+
+  <script>
+    const SOURCE_LABELS = {
+      spca: "SPCA St. John's",
+      heavenly: "Heavenly Creatures",
+      stjohns: "City of St. John's",
+    };
+
+    const grid = document.getElementById("grid");
+    const countLabel = document.getElementById("count-label");
+    const filterSource = document.getElementById("filter-source");
+    const filterSex = document.getElementById("filter-sex");
+    const filterAge = document.getElementById("filter-age");
+    const sortSelect = document.getElementById("sort");
+
+    let allListings = [];
+
+    function isNew(firstSeen) {
+      const seen = new Date(firstSeen);
+      const now = new Date();
+      return now.getTime() - seen.getTime() < 24 * 60 * 60 * 1000;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderCard(listing) {
+      const sourceLabel = SOURCE_LABELS[listing.source] || listing.source;
+      const newBadge = isNew(listing.firstSeen)
+        ? `<span class="badge badge-new">New!</span>`
+        : "";
+      const sexBadge = listing.sex && listing.sex !== "Unknown"
+        ? `<span class="badge badge-sex">${escapeHtml(listing.sex)}</span>`
+        : "";
+      const ageBadge = listing.age
+        ? `<span class="badge badge-age">${escapeHtml(listing.age)}</span>`
+        : "";
+      const breedLine = listing.breed
+        ? `<p class="card-breed">${escapeHtml(listing.breed)}</p>`
+        : "";
+
+      const photo = listing.photoUrl
+        ? `<img class="card-photo" src="${escapeHtml(listing.photoUrl)}" alt="Photo of ${escapeHtml(listing.name)}" loading="lazy" />`
+        : `<div class="card-photo-placeholder">&#128049;</div>`;
+
+      return `
+        <div class="card">
+          ${photo}
+          <div class="card-body">
+            <h2>${escapeHtml(listing.name)}</h2>
+            <div class="badges">
+              <span class="badge badge-source">${escapeHtml(sourceLabel)}</span>
+              ${newBadge}
+              ${sexBadge}
+              ${ageBadge}
+            </div>
+            ${breedLine}
+            <a class="card-link" href="${escapeHtml(listing.listingUrl)}" target="_blank" rel="noopener noreferrer">View listing &rarr;</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function render(listings) {
+      if (listings.length === 0) {
+        grid.innerHTML = `
+          <div id="empty-state">
+            <div class="emoji">&#128568;</div>
+            <p>No kittens found matching your filters.</p>
+          </div>
+        `;
+      } else {
+        grid.innerHTML = listings.map(renderCard).join("");
+      }
+
+      const total = listings.length;
+      countLabel.textContent = `${total} listing${total === 1 ? "" : "s"}`;
+    }
+
+    function sortListings(listings) {
+      const sorted = [...listings];
+      const mode = sortSelect.value;
+      if (mode === "alpha") {
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+      } else {
+        sorted.sort((a, b) => new Date(b.firstSeen).getTime() - new Date(a.firstSeen).getTime());
+      }
+      return sorted;
+    }
+
+    async function fetchListings() {
+      const params = new URLSearchParams();
+      if (filterSource.value) params.set("source", filterSource.value);
+      if (filterSex.value) params.set("sex", filterSex.value);
+      if (filterAge.value) params.set("age", filterAge.value);
+
+      const url = `/api/listings${params.toString() ? "?" + params.toString() : ""}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allListings = await res.json();
+        render(sortListings(allListings));
+      } catch (err) {
+        grid.innerHTML = `
+          <div id="empty-state">
+            <div class="emoji">&#9888;&#65039;</div>
+            <p>Failed to load listings. Please try again later.</p>
+          </div>
+        `;
+        countLabel.textContent = "";
+        console.error("Failed to fetch listings:", err);
+      }
+    }
+
+    filterSource.addEventListener("change", fetchListings);
+    filterSex.addEventListener("change", fetchListings);
+    filterAge.addEventListener("change", fetchListings);
+    sortSelect.addEventListener("change", () => render(sortListings(allListings)));
+
+    fetchListings();
+  </script>
 </body>
 </html>
