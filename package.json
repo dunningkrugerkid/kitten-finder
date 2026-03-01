@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "start": "node --import tsx src/start.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

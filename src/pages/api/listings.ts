@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { createDb, getActiveListings } from "../../lib/db";
 
-const db = createDb();
+const db = createDb(process.env.DB_PATH || undefined);
 
 export const GET: APIRoute = ({ url }) => {
   const source = url.searchParams.get("source") || undefined;
