@@ -58,8 +58,8 @@ export async function loadConfig(): Promise<AppConfig> {
   return {
     shelters,
     notifications,
-    scrapeIntervalHours: Number(process.env.SCRAPE_INTERVAL_HOURS ?? 6),
-    dbPath: process.env.DB_PATH ?? "kittens.db",
-    port: Number(process.env.PORT ?? 4321),
+    scrapeIntervalHours: parseInt(process.env.SCRAPE_INTERVAL_HOURS || "4", 10),
+    dbPath: process.env.DB_PATH || "kitten-finder.db",
+    port: parseInt(process.env.PORT || "3000", 10),
   };
 }
