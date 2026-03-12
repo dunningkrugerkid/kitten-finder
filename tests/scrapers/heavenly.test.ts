@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { HeavenlyScraper } from "../../src/lib/scrapers/heavenly.js";
+import HeavenlyScraper from "../../src/lib/scrapers/heavenly.js";
 
 describe("HeavenlyScraper", () => {
   const scraper = new HeavenlyScraper();

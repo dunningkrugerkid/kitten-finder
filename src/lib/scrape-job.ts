@@ -1,22 +1,14 @@
 import type Database from "better-sqlite3";
 import { upsertListings, deactivateMissing } from "./db.js";
 import { runAllScrapers } from "./scrapers/runner.js";
-import { sendKittenAlerts } from "./discord.js";
-import { SpcaScraper } from "./scrapers/spca.js";
-import { HeavenlyScraper } from "./scrapers/heavenly.js";
-import { StJohnsScraper } from "./scrapers/stjohns.js";
+import type { Scraper } from "./scrapers/types.js";
+import type { Notifier } from "./notifiers/types.js";
 import type { CatListing } from "./types.js";
-
-const scrapers = [
-  new SpcaScraper(),
-  new HeavenlyScraper(),
-  new StJohnsScraper(),
-];
 
 export async function runScrapeJob(
   db: Database.Database,
-  discordToken?: string,
-  discordUserId?: string,
+  scrapers: Scraper[],
+  notifiers: Notifier[],
 ): Promise<{ newCount: number }> {
   console.log(`[${new Date().toISOString()}] Starting scrape job...`);
 
@@ -35,14 +27,16 @@ export async function runScrapeJob(
     `Scrape complete. ${allNewListings.length} new listing(s) found.`,
   );
 
-  if (allNewListings.length > 0 && discordToken && discordUserId) {
-    try {
-      await sendKittenAlerts(allNewListings, discordToken, discordUserId);
-    } catch (err) {
-      console.error(
-        "Failed to send Discord alerts:",
-        err instanceof Error ? err.message : err,
-      );
+  if (allNewListings.length > 0) {
+    for (const notifier of notifiers) {
+      try {
+        await notifier.notify(allNewListings);
+      } catch (err) {
+        console.error(
+          `[${notifier.name}] Failed to send alerts:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
     }
   }
 

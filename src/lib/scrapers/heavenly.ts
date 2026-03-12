@@ -4,7 +4,7 @@ import type { Scraper, ScraperResult } from "./types.js";
 
 const HEAVENLY_URL = "https://heavenlycreatures.ca/adoptions/available-cats/";
 
-export class HeavenlyScraper implements Scraper {
+export default class HeavenlyScraper implements Scraper {
   readonly source = "heavenly";
 
   async scrape(): Promise<ScraperResult> {

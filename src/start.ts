@@ -2,20 +2,22 @@ import "dotenv/config";
 import cron from "node-cron";
 import { createDb } from "./lib/db.js";
 import { runScrapeJob } from "./lib/scrape-job.js";
+import { loadConfig, buildScrapers, buildNotifiers } from "./lib/config.js";
 
-const dbPath = process.env.DB_PATH || "kitten-finder.db";
-const db = createDb(dbPath);
-const intervalHours = parseInt(process.env.SCRAPE_INTERVAL_HOURS || "4", 10);
-const discordToken = process.env.DISCORD_BOT_TOKEN || "";
-const discordUserId = process.env.DISCORD_USER_ID || "";
+const config = await loadConfig();
+const db = createDb(config.dbPath);
+const scrapers = await buildScrapers(config.shelters);
+const notifiers = buildNotifiers(config);
 
 // Run initial scrape
-runScrapeJob(db, discordToken, discordUserId);
+runScrapeJob(db, scrapers, notifiers);
 
 // Schedule recurring scrapes
-const cronExpr = `0 */${intervalHours} * * *`;
+const cronExpr = `0 */${config.scrapeIntervalHours} * * *`;
 cron.schedule(cronExpr, () => {
-  runScrapeJob(db, discordToken, discordUserId);
+  runScrapeJob(db, scrapers, notifiers);
 });
 
-console.log(`Kitten Finder scraper running — every ${intervalHours} hours`);
+console.log(
+  `Kitten Finder running — ${scrapers.length} shelter(s), every ${config.scrapeIntervalHours} hours`,
+);

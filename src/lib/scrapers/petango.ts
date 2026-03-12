@@ -1,32 +1,69 @@
 import { chromium } from "playwright";
 import type { NewCatListing } from "../types.js";
+import type { PetangoShelter } from "../config.js";
 import type { Scraper, ScraperResult } from "./types.js";
 
-const PETANGO_URL =
-  "https://ws.petango.com/webservices/adoptablesearch/wsAdoptableAnimals.aspx?" +
-  "species=Cat&sex=A&agegroup=All&onhold=A&orderby=Random&colnum=3" +
-  "&css=https://spcastjohns.org/wp-content/themes/prime/assets/css/adopt.css" +
-  "&authkey=o8exmnumy8ij0fy3wsebhs082gj44ikqi13yq6b7bg4wcgrxgm" +
-  "&detailsInPopup=Yes&featuredPet=Include&stageID=2";
-
-const SPCA_AUTHKEY = "o8exmnumy8ij0fy3wsebhs082gj44ikqi13yq6b7bg4wcgrxgm";
+const PETANGO_BASE =
+  "https://ws.petango.com/webservices/adoptablesearch/wsAdoptableAnimals.aspx";
 
 const PETANGO_DETAILS_BASE =
   "https://ws.petango.com/webservices/adoptablesearch/wsAdoptableAnimalDetails.aspx";
 
-export class SpcaScraper implements Scraper {
-  readonly source = "spca";
+const DEFAULT_CSS =
+  "https://ws.petango.com/WebServices/adoptablesearch/css/styles.css";
+
+export interface PetangoUrlOptions {
+  authKey: string;
+  cssUrl?: string;
+  detailsInPopup?: boolean;
+}
+
+export function buildPetangoUrl(opts: PetangoUrlOptions): string {
+  const params = new URLSearchParams({
+    species: "Cat",
+    sex: "A",
+    agegroup: "All",
+    onhold: "A",
+    orderby: "Random",
+    colnum: "3",
+    css: opts.cssUrl ?? DEFAULT_CSS,
+    authkey: opts.authKey,
+    detailsInPopup: opts.detailsInPopup ? "Yes" : "No",
+    featuredPet: "Include",
+    stageID: "",
+  });
+
+  return `${PETANGO_BASE}?${params.toString()}`;
+}
+
+export function buildDetailsUrl(sourceId: string, authKey: string): string {
+  return `${PETANGO_DETAILS_BASE}?id=${sourceId}&authkey=${authKey}`;
+}
+
+export class PetangoScraper implements Scraper {
+  readonly source: string;
+  private config: PetangoShelter;
+
+  constructor(config: PetangoShelter) {
+    this.source = config.key;
+    this.config = config;
+  }
 
   async scrape(): Promise<ScraperResult> {
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();
-      await page.goto(PETANGO_URL, {
+      const url = buildPetangoUrl({
+        authKey: this.config.authKey,
+        cssUrl: this.config.cssUrl,
+        detailsInPopup: this.config.detailsInPopup,
+      });
+
+      await page.goto(url, {
         waitUntil: "networkidle",
         timeout: 30_000,
       });
 
-      // Wait for results — SPCA may have zero cats available
       try {
         await page.waitForSelector("td.list-item", { timeout: 15_000 });
       } catch {
@@ -49,7 +86,6 @@ export class SpcaScraper implements Scraper {
           const photoUrl =
             cell.querySelector(".list-animal-photo")?.getAttribute("src") ?? "";
 
-          // Extract sex from combined "Female/Spayed" or "Male/Neutered"
           const sex = sexRaw.split("/")[0] || sexRaw;
 
           return { name, sourceId, sex, breed, age, photoUrl };
@@ -67,7 +103,7 @@ export class SpcaScraper implements Scraper {
           sex: l.sex,
           breed: l.breed,
           description: "",
-          listingUrl: `${PETANGO_DETAILS_BASE}?id=${l.sourceId}&authkey=${SPCA_AUTHKEY}`,
+          listingUrl: buildDetailsUrl(l.sourceId, this.config.authKey),
         }));
 
       return { listings: results, source: this.source };
