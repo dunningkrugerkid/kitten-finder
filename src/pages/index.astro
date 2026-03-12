@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kitten Finder for Callie</title>
+  <title>Kitten Finder</title>
   <style is:global>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -230,8 +230,8 @@
 </head>
 <body>
   <header>
-    <h1>Kitten Finder for Callie</h1>
-    <p>Finding a friend in St. John's, NL</p>
+    <h1>Kitten Finder</h1>
+    <p>Adoptable cats near you</p>
   </header>
 
   <div class="controls">
@@ -239,9 +239,6 @@
       <label for="filter-source">Source</label>
       <select id="filter-source">
         <option value="">All</option>
-        <option value="spca">SPCA St. John's</option>
-        <option value="heavenly">Heavenly Creatures</option>
-        <option value="stjohns">City of St. John's</option>
       </select>
     </div>
 
@@ -281,11 +278,27 @@
   </div>
 
   <script>
-    const SOURCE_LABELS = {
-      spca: "SPCA St. John's",
-      heavenly: "Heavenly Creatures",
-      stjohns: "City of St. John's",
-    };
+    let SOURCE_LABELS = {};
+
+    async function loadShelters() {
+      try {
+        const res = await fetch("/api/shelters");
+        if (!res.ok) return;
+        const shelters = await res.json();
+        SOURCE_LABELS = Object.fromEntries(shelters.map(s => [s.key, s.name]));
+
+        // Populate source filter dropdown
+        const filterSource = document.getElementById("filter-source");
+        for (const shelter of shelters) {
+          const opt = document.createElement("option");
+          opt.value = shelter.key;
+          opt.textContent = shelter.name;
+          filterSource.appendChild(opt);
+        }
+      } catch (err) {
+        console.error("Failed to load shelters:", err);
+      }
+    }
 
     const grid = document.getElementById("grid");
     const countLabel = document.getElementById("count-label");
@@ -403,7 +416,7 @@
     filterAge.addEventListener("change", fetchListings);
     sortSelect.addEventListener("change", () => render(sortListings(allListings)));
 
-    fetchListings();
+    loadShelters().then(() => fetchListings());
   </script>
 </body>
 </html>
