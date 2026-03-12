@@ -23,7 +23,7 @@ const shelters: ShelterConfig[] = [
     name: "Heavenly Creatures",
     key: "heavenly",
     color: "#9B59B6",
-    scraperPath: "./src/scrapers/heavenly.ts",
+    scraperPath: "./src/lib/scrapers/heavenly.ts",
   },
 ];
 

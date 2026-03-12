@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { PetangoScraper } from "./scrapers/petango.js";
 import type { Scraper } from "./scrapers/types.js";
 import type { Notifier } from "./notifiers/types.js";
@@ -79,8 +80,9 @@ export async function buildScrapers(
     if (shelter.type === "petango") {
       scrapers.push(new PetangoScraper(shelter));
     } else {
-      // Dynamic import of custom scraper module
-      const mod = await import(shelter.scraperPath);
+      // Dynamic import of custom scraper module (resolve relative to project root)
+      const absolutePath = resolve(process.cwd(), shelter.scraperPath);
+      const mod = await import(absolutePath);
       const ScraperClass =
         mod.default ||
         Object.values(mod).find(
