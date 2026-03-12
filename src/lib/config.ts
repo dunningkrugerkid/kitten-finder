@@ -1,3 +1,9 @@
+import { PetangoScraper } from "./scrapers/petango.js";
+import type { Scraper } from "./scrapers/types.js";
+import type { Notifier } from "./notifiers/types.js";
+import { DiscordNotifier } from "./notifiers/discord.js";
+import { WebhookNotifier } from "./notifiers/webhook.js";
+
 export interface PetangoShelter {
   type: "petango";
   name: string;
@@ -62,4 +68,53 @@ export async function loadConfig(): Promise<AppConfig> {
     dbPath: process.env.DB_PATH || "kitten-finder.db",
     port: parseInt(process.env.PORT || "3000", 10),
   };
+}
+
+export async function buildScrapers(
+  shelters: ShelterConfig[],
+): Promise<Scraper[]> {
+  const scrapers: Scraper[] = [];
+
+  for (const shelter of shelters) {
+    if (shelter.type === "petango") {
+      scrapers.push(new PetangoScraper(shelter));
+    } else {
+      // Dynamic import of custom scraper module
+      const mod = await import(shelter.scraperPath);
+      const ScraperClass =
+        mod.default ||
+        Object.values(mod).find(
+          (v: any) => typeof v === "function" && v.prototype?.scrape,
+        );
+      if (ScraperClass) {
+        scrapers.push(new (ScraperClass as any)());
+      } else {
+        console.error(
+          `[config] Could not load scraper from ${shelter.scraperPath}`,
+        );
+      }
+    }
+  }
+
+  return scrapers;
+}
+
+export function buildNotifiers(config: AppConfig): Notifier[] {
+  const notifiers: Notifier[] = [];
+
+  if (config.notifications.discord) {
+    notifiers.push(
+      new DiscordNotifier(
+        config.notifications.discord.botToken,
+        config.notifications.discord.userId,
+        config.shelters,
+      ),
+    );
+  }
+
+  if (config.notifications.webhook) {
+    notifiers.push(new WebhookNotifier(config.notifications.webhook.url));
+  }
+
+  return notifiers;
 }
