@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import type { NewCatListing } from "../types.js";
+import { normalizeAge, type NewCatListing } from "../types.js";
 import type { Scraper, ScraperResult } from "./types.js";
 
 const HEAVENLY_URL = "https://heavenlycreatures.ca/adoptions/available-cats/";
@@ -215,7 +215,7 @@ export default class HeavenlyScraper implements Scraper {
           sourceId: `heavenly-${slugify(entry.name)}-${index}`,
           name: entry.name,
           photoUrl: entry.photoUrl,
-          age: parsed.age,
+          age: normalizeAge(parsed.age),
           sex: parsed.sex,
           breed: parsed.breed,
           description: parsed.description || entry.description,
