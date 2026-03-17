@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import type { NewCatListing } from "../types.js";
+import { normalizeAge, type NewCatListing } from "../types.js";
 import type { PetangoShelter } from "../config.js";
 import type { Scraper, ScraperResult } from "./types.js";
 
@@ -99,7 +99,7 @@ export class PetangoScraper implements Scraper {
           sourceId: l.sourceId,
           name: l.name,
           photoUrl: l.photoUrl,
-          age: l.age,
+          age: normalizeAge(l.age),
           sex: l.sex,
           breed: l.breed,
           description: "",
